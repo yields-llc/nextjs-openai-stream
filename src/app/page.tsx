@@ -1,95 +1,93 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+import { Button, Form, Input, Spin } from 'antd'
+import { useState } from 'react'
+import { OpenAiChatPayload } from '@/types'
+const { TextArea } = Input
+
+type FormData = {
+  model: string
+  chat: string
+}
 
 export default function Home() {
+  const [formData, setFormData] = useState<FormData>({ model: 'gpt-4-turbo-preview', chat: '' })
+  const [feedback, setFeedback] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
+  
+  const onValuesChange = (_changedFields: any, allFields: FormData) => {
+    setFormData(allFields)
+  }
+  
+  const onSubmit = async (formData: FormData) => {
+    const payload: OpenAiChatPayload = {
+      model: formData.model,
+      messages: [
+        { role: 'user', content: formData.chat },
+      ],
+    }
+    
+    setFeedback('')
+    setLoading(true)
+    
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    setLoading(false)
+    
+    if (!response.ok) {
+      throw new Error(response.statusText)
+    }
+    
+    const data = response.body
+    if (!data) {
+      return
+    }
+    
+    const reader = data.getReader()
+    const decoder = new TextDecoder()
+    let done = false
+    let buffer = ''
+    
+    const timer = setInterval(async () => {
+      const { value, done: doneReading } = await reader.read()
+      done = doneReading
+      const chunkValue = decoder.decode(value)
+      buffer += chunkValue
+      setFeedback(buffer)
+      if (done) {
+        clearTimeout(timer)
+      }
+    }, 50)
+  }
+  
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <>
+      <Form initialValues={formData} onFinish={onSubmit} onValuesChange={onValuesChange} colon={false} labelCol={{ span: 4 }} wrapperCol={{ span: 20 }}>
+        <Form.Item wrapperCol={{ offset: 4, span: 20 }}>
+          <h1 style={{ marginBlockEnd: '0' }}>Next.js OpenAI Stream</h1>
+        </Form.Item>
+        <Form.Item name={'model'} label={'Model'}>
+          <Input disabled />
+        </Form.Item>
+        <Form.Item name={'chat'} label={'Chat'}>
+          <TextArea rows={10} />
+        </Form.Item>
+        <Form.Item wrapperCol={{ offset: 4, span: 20 }}>
+          <Button htmlType={'submit'} type={'primary'}>
+            Submit
+          </Button>
+        </Form.Item>
+        <Form.Item wrapperCol={{ offset: 4, span: 20 }}>
+          <div>{feedback}</div>
+        </Form.Item>
+      </Form>
+      <Spin fullscreen spinning={loading} />
+    </>
   );
 }

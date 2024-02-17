@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# nextjs-openai-stream
+This project is a sample app to chat with `ChatGTP` using `OpenAI`'s API.
 
-## Getting Started
-
-First, run the development server:
+## Run locally
+First, install the dependent packages.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+$ yarn
+➤ YN0000: · Yarn 4.1.0
+➤ YN0000: ┌ Resolution step
+➤ YN0000: └ Completed
+➤ YN0000: ┌ Fetch step
+➤ YN0000: └ Completed in 0s 347ms
+➤ YN0000: ┌ Link step
+➤ YN0000: └ Completed in 5s 360ms
+➤ YN0000: · Done in 5s 880ms
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+All you have to do is launch the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+$ yarn dev
+   ▲ Next.js 14.1.0
+   - Local:        http://localhost:3000
+   - Environments: .env.local
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+ ✓ Ready in 1170ms
+```
 
-## Learn More
+## Deploy to AWS
+Install `AWS SAM CLI` in advance by referring to the following link.
 
-To learn more about Next.js, take a look at the following resources:
+- [Installing the AWS SAM CLI - AWS Serverless Application Model](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The first time you deploy, `make deploy` with the following parameters.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- `profile`: AWS profile
+- `openai_api_key`: OpenAI API key
 
-## Deploy on Vercel
+```bash
+$ make deploy profile=${AWS_PROFILE} openai_api_key="${OPENAI_API_KEY}"
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+sam build --no-cached
+Building codeuri: /Users/motohiro/Projects/yields-llc/nextjs-openai-stream runtime: None metadata: {'DockerTag': 'v1', 'DockerContext': '/Users/motohiro/Projects/yields-llc/nextjs-openai-stream', 'Dockerfile': 'Dockerfile'} architecture: x86_64 functions: NextFunction
+Building image for NextFunction function
+Setting DockerBuildArgs: {} for NextFunction function
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+...(building app)
+```
+
+Then, when build and deployment is complete, the Lambda URL will be output as shown below, which can be accessed.
+
+```bash
+CloudFormation outputs from deployed stack
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Outputs                                                                                                                                                                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Key                 NextFunctionUrl                                                                                                                                                                                                            
+Description         -                                                                                                                                                                                                                          
+Value               https://{LAMBDA_URL_ID}.lambda-url.{AWS_REGION}.on.aws/                                                                                                                                                 
+
+Key                 NextFunction                                                                                                                                                                                                               
+Description         -                                                                                                                                                                                                                          
+Value               arn:aws:lambda:{AWS_REGION}:{AWS_ACCOUNT_ID}:function:nextjs-openai-stream-NextFunction-{FUNCTION_ID}                                                                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Successfully created/updated stack - nextjs-openai-stream in {AWS_REGION}
+```
+
+The top page should appear as shown below.
+
+![Next.js](./docs/demo.gif)
